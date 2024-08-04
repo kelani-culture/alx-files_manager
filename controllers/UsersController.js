@@ -1,5 +1,7 @@
 import dbClient from '../utils/db.js';
 import redisClient from '../utils/redis.js';
+import sha1 from 'sha1'; // Ensure you import sha1 correctly
+import { userQueue } from '../worker.js'; // Import the userQueue
 
 class UsersController {
   static async postNew(req, res) {
@@ -24,6 +26,9 @@ class UsersController {
 
     const result = await userCollection.insertOne(newUser);
     const userId = result.insertedId;
+
+    // Add userId to userQueue for sending welcome email
+    await userQueue.add('sendWelcomeEmail', { userId });
 
     return res.status(201).json({ id: userId, email });
   }
